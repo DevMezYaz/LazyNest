@@ -1,0 +1,31 @@
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+
+# PyInstaller
+build/
+dist/
+build_rel/
+dist_rel/
+build_test/
+dist_test/
+*.ico
+
+# The app's own data — jobs, library cache, logs
+lazynest_data/
+
+# Produced by runs, not source
+Outputs/
+Report/
+
+# Release binaries live on the GitHub release, not in the repo
+Release/*.zip
+
+# Customer designs
+Input files*/
+*.3dm
+
+# macOS
+.DS_Store

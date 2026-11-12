@@ -1,0 +1,42 @@
+LazyNest v2.4 — building the Windows .exe
+=========================================
+
+A Windows .exe can only be produced on Windows (PyInstaller cannot
+cross-build), so this package holds the program plus the build script.
+It takes about five minutes, once.
+
+1. Install Python 3.11 or newer from python.org.
+   TICK "Add Python to PATH" on the first screen of the installer.
+
+2. Unzip this folder somewhere simple, e.g. C:\LazyNest
+
+3. Double-click  build_windows.bat
+   It installs what it needs and builds the program.
+
+4. The result is  dist\LazyNest.exe
+   That single file is the whole application — copy it anywhere.
+
+To upload it as part of the GitHub release, take dist\LazyNest.exe and
+attach it to the release, or zip it first as LazyNest-v2.4-Windows.zip.
+
+
+Running without building
+------------------------
+To try it without making an .exe:
+
+    pip install -r requirements.txt
+    python app.py
+
+
+Where LazyNest keeps its settings
+---------------------------------
+In a folder named  lazynest_data  next to the .exe: your jobs, the design
+library cache, and the log. Delete it to start fresh. Before handing the
+.exe to someone else, delete that folder so your jobs do not travel with it.
+
+
+If Windows SmartScreen warns about the file
+-------------------------------------------
+The .exe is unsigned, so Windows shows "Windows protected your PC".
+Click "More info" then "Run anyway". This happens because the file has no
+code-signing certificate, not because anything is wrong with it.

@@ -1,0 +1,58 @@
+name: Build LazyNest
+
+# Run it from the Actions tab ("Run workflow"), or automatically when a
+# version tag is pushed. The finished apps appear as downloadable artifacts.
+on:
+  workflow_dispatch:
+  push:
+    tags: ['v*']
+
+jobs:
+  windows:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Install dependencies
+        run: |
+          pip install -r requirements.txt
+          pip install pyinstaller pillow
+      - name: Make the icon
+        run: python -c "from PIL import Image; img=Image.open('icon.png'); img.save('icon.ico', format='ICO', sizes=[(256,256),(128,128),(64,64),(32,32),(16,16)])"
+      - name: Build LazyNest.exe
+        run: >
+          python -m PyInstaller --onefile --windowed --name LazyNest
+          --icon icon.ico --add-data "icon.png;."
+          --hidden-import ezdxf --hidden-import ezdxf.fonts
+          --hidden-import shapely --hidden-import shapely.geometry
+          --hidden-import shapely.affinity --hidden-import shapely.ops
+          --hidden-import openpyxl --hidden-import numpy
+          --hidden-import pyclipper --hidden-import PIL
+          --collect-all PyQt6 --collect-all ezdxf --collect-all shapely
+          app.py
+      - uses: actions/upload-artifact@v4
+        with:
+          name: LazyNest-Windows
+          path: dist/LazyNest.exe
+
+  macos:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Install dependencies
+        run: |
+          pip install -r requirements.txt
+          pip install pyinstaller pillow
+      - name: Build LazyNest.app
+        run: python -m PyInstaller --noconfirm LazyNest.spec
+      - name: Zip the app
+        run: ditto -c -k --sequesterRsrc --keepParent dist/LazyNest.app LazyNest-macOS.zip
+      - uses: actions/upload-artifact@v4
+        with:
+          name: LazyNest-macOS
+          path: LazyNest-macOS.zip
