@@ -46,6 +46,18 @@ jobs:
         with:
           name: LazyNest-Windows
           path: dist/LazyNest-*-Windows.exe
+      - name: Publish to the release
+        if: github.ref_type == 'tag'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          # each platform publishes as soon as it is built, so a slow runner
+          # for one OS never holds up the others
+          gh release view "$GITHUB_REF_NAME" >/dev/null 2>&1 || \
+            gh release create "$GITHUB_REF_NAME" --title "LazyNest $GITHUB_REF_NAME" \
+              --notes-file Release/RELEASE_NOTES.md || true
+          gh release upload "$GITHUB_REF_NAME" dist/LazyNest-*-Windows.exe --clobber
 
   macos:
     strategy:
@@ -78,28 +90,15 @@ jobs:
         with:
           name: LazyNest-macOS-${{ matrix.arch }}
           path: LazyNest-*-macOS-*.zip
-
-  release:
-    # only when a version tag was pushed
-    if: github.ref_type == 'tag'
-    needs: [windows, macos]
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/download-artifact@v4
-        with:
-          path: assets
-      - name: Publish the release
+      - name: Publish to the release
+        if: github.ref_type == 'tag'
         env:
           GH_TOKEN: ${{ github.token }}
+        shell: bash
         run: |
-          find assets -type f \( -name '*.exe' -o -name '*.zip' \) -exec mv {} . \;
-          ls -lh LazyNest-*
-          notes=Release/RELEASE_NOTES.md
-          [ -f "$notes" ] || notes=README.md
-          if gh release view "$GITHUB_REF_NAME" >/dev/null 2>&1; then
-            gh release upload "$GITHUB_REF_NAME" LazyNest-* --clobber
-          else
-            gh release create "$GITHUB_REF_NAME" LazyNest-* \
-              --title "LazyNest $GITHUB_REF_NAME" --notes-file "$notes"
-          fi
+          # each platform publishes as soon as it is built, so a slow runner
+          # for one OS never holds up the others
+          gh release view "$GITHUB_REF_NAME" >/dev/null 2>&1 || \
+            gh release create "$GITHUB_REF_NAME" --title "LazyNest $GITHUB_REF_NAME" \
+              --notes-file Release/RELEASE_NOTES.md || true
+          gh release upload "$GITHUB_REF_NAME" LazyNest-*-macOS-${{ matrix.arch }}.zip --clobber
