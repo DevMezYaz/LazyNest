@@ -7,15 +7,25 @@ by bounding boxes, and exports for Rhino and for PRISMA / Solanki.
 
 | File | For |
 |---|---|
-| `LazyNest-v2.4-macOS-arm64.zip` | macOS (Apple Silicon) — unzip and run |
-| `LazyNest-v2.4-Windows-build.zip` | Windows — run `build_windows.bat` once to make `LazyNest.exe` (see `BUILD-WINDOWS.txt` inside) |
+| `LazyNest-v2.4-Windows.exe` | Windows 10/11 — download and run, nothing to install |
+| `LazyNest-v2.4-macOS-arm64.zip` | Mac with Apple Silicon (M1–M4) — unzip and run |
+| `LazyNest-v2.4-macOS-intel.zip` | Intel Mac — unzip and run |
 
-**macOS:** the app is unsigned, so the first launch needs **right-click → Open
-→ Open**. Double-clicking shows "cannot be opened because the developer cannot
-be verified" until you do that once.
+Both apps are self-contained: no Python, no setup. LazyNest keeps its settings
+in a `lazynest_data` folder next to the program.
 
-**Windows:** SmartScreen shows "Windows protected your PC" for unsigned
-programs — **More info → Run anyway**.
+**Windows.** SmartScreen says "Windows protected your PC" because the file is
+not code-signed: **More info → Run anyway**.
+
+**macOS.** The app is not signed or notarised either, and anything downloaded
+from the internet is quarantined, so macOS may say it "is damaged and can't be
+opened". It is not damaged — clear the quarantine flag once:
+
+```bash
+xattr -dr com.apple.quarantine /Applications/LazyNest.app
+```
+
+Or right-click the app → **Open** → **Open**.
 
 ## What's new in 2.4
 

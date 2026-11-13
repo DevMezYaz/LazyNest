@@ -1,11 +1,15 @@
 name: Build LazyNest
 
-# Run it from the Actions tab ("Run workflow"), or automatically when a
-# version tag is pushed. The finished apps appear as downloadable artifacts.
+# Pushing a version tag (v2.4, v2.5, …) builds the app for Windows, Apple
+# Silicon and Intel Mac, then publishes them on the GitHub release for that
+# tag. Can also be run by hand from the Actions tab.
 on:
   workflow_dispatch:
   push:
     tags: ['v*']
+
+permissions:
+  contents: write
 
 jobs:
   windows:
@@ -32,13 +36,27 @@ jobs:
           --hidden-import pyclipper --hidden-import PIL
           --collect-all PyQt6 --collect-all ezdxf --collect-all shapely
           app.py
+      - name: Name it after the version
+        shell: bash
+        run: |
+          v="${GITHUB_REF_NAME#refs/tags/}"
+          [ "$GITHUB_REF_TYPE" = "tag" ] || v="dev"
+          mv dist/LazyNest.exe "dist/LazyNest-$v-Windows.exe"
       - uses: actions/upload-artifact@v4
         with:
           name: LazyNest-Windows
-          path: dist/LazyNest.exe
+          path: dist/LazyNest-*-Windows.exe
 
   macos:
-    runs-on: macos-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - runner: macos-latest     # Apple Silicon
+            arch: arm64
+          - runner: macos-13         # Intel
+            arch: intel
+    runs-on: ${{ matrix.runner }}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
@@ -51,8 +69,37 @@ jobs:
       - name: Build LazyNest.app
         run: python -m PyInstaller --noconfirm LazyNest.spec
       - name: Zip the app
-        run: ditto -c -k --sequesterRsrc --keepParent dist/LazyNest.app LazyNest-macOS.zip
+        run: |
+          v="${GITHUB_REF_NAME#refs/tags/}"
+          [ "$GITHUB_REF_TYPE" = "tag" ] || v="dev"
+          ditto -c -k --sequesterRsrc --keepParent dist/LazyNest.app \
+                "LazyNest-$v-macOS-${{ matrix.arch }}.zip"
       - uses: actions/upload-artifact@v4
         with:
-          name: LazyNest-macOS
-          path: LazyNest-macOS.zip
+          name: LazyNest-macOS-${{ matrix.arch }}
+          path: LazyNest-*-macOS-*.zip
+
+  release:
+    # only when a version tag was pushed
+    if: github.ref_type == 'tag'
+    needs: [windows, macos]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          path: assets
+      - name: Publish the release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          find assets -type f \( -name '*.exe' -o -name '*.zip' \) -exec mv {} . \;
+          ls -lh LazyNest-*
+          notes=Release/RELEASE_NOTES.md
+          [ -f "$notes" ] || notes=README.md
+          if gh release view "$GITHUB_REF_NAME" >/dev/null 2>&1; then
+            gh release upload "$GITHUB_REF_NAME" LazyNest-* --clobber
+          else
+            gh release create "$GITHUB_REF_NAME" LazyNest-* \
+              --title "LazyNest $GITHUB_REF_NAME" --notes-file "$notes"
+          fi
