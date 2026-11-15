@@ -58,17 +58,13 @@ jobs:
             gh release create "$GITHUB_REF_NAME" --title "LazyNest $GITHUB_REF_NAME" \
               --notes-file Release/RELEASE_NOTES.md || true
           gh release upload "$GITHUB_REF_NAME" dist/LazyNest-*-Windows.exe --clobber
+          gh release edit "$GITHUB_REF_NAME" --notes-file Release/RELEASE_NOTES.md
 
   macos:
-    strategy:
-      fail-fast: false
-      matrix:
-        include:
-          - runner: macos-latest     # Apple Silicon
-            arch: arm64
-          - runner: macos-13         # Intel
-            arch: intel
-    runs-on: ${{ matrix.runner }}
+    # Apple Silicon only: GitHub has retired its Intel macOS runners, so an
+    # Intel job would sit queued until it is cancelled. Intel Macs can run
+    # LazyNest from source (see the README).
+    runs-on: macos-latest
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
@@ -85,10 +81,10 @@ jobs:
           v="${GITHUB_REF_NAME#refs/tags/}"
           [ "$GITHUB_REF_TYPE" = "tag" ] || v="dev"
           ditto -c -k --sequesterRsrc --keepParent dist/LazyNest.app \
-                "LazyNest-$v-macOS-${{ matrix.arch }}.zip"
+                "LazyNest-$v-macOS-arm64.zip"
       - uses: actions/upload-artifact@v4
         with:
-          name: LazyNest-macOS-${{ matrix.arch }}
+          name: LazyNest-macOS-arm64
           path: LazyNest-*-macOS-*.zip
       - name: Publish to the release
         if: github.ref_type == 'tag'
@@ -101,4 +97,5 @@ jobs:
           gh release view "$GITHUB_REF_NAME" >/dev/null 2>&1 || \
             gh release create "$GITHUB_REF_NAME" --title "LazyNest $GITHUB_REF_NAME" \
               --notes-file Release/RELEASE_NOTES.md || true
-          gh release upload "$GITHUB_REF_NAME" LazyNest-*-macOS-${{ matrix.arch }}.zip --clobber
+          gh release upload "$GITHUB_REF_NAME" LazyNest-*-macOS-arm64.zip --clobber
+          gh release edit "$GITHUB_REF_NAME" --notes-file Release/RELEASE_NOTES.md

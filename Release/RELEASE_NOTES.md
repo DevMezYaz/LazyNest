@@ -9,7 +9,9 @@ by bounding boxes, and exports for Rhino and for PRISMA / Solanki.
 |---|---|
 | `LazyNest-v2.4-Windows.exe` | Windows 10/11 — download and run, nothing to install |
 | `LazyNest-v2.4-macOS-arm64.zip` | Mac with Apple Silicon (M1–M4) — unzip and run |
-| `LazyNest-v2.4-macOS-intel.zip` | Intel Mac — unzip and run |
+
+On an Intel Mac, run it from source instead: `pip install -r requirements.txt`
+then `python app.py`.
 
 Both apps are self-contained: no Python, no setup. LazyNest keeps its settings
 in a `lazynest_data` folder next to the program.

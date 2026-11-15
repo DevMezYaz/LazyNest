@@ -22,6 +22,9 @@ Report/
 
 # Release binaries live on the GitHub release, not in the repo
 Release/*.zip
+Release/*.exe
+Release/*.dmg
+Release/*.app
 
 # Customer designs
 Input files*/
